@@ -1,6 +1,7 @@
 from channels.generic.websocket import WebsocketConsumer
 from Core.droneClass import Drone
 import json, time
+import threading
 
 ############################################################
 import dronekit_sitl
@@ -37,14 +38,19 @@ class DroneConsumer(WebsocketConsumer):
         #     "connection": "LOST",
         #     "drone":"HOME RETURN AND LAND"
         # })
-        self.drone.return_home()
-        while self.drone.distance_to_home()["distance"] >= 0.3:
-            time.sleep(1)
-        self.drone.land()
+        def run_task():
+            self.drone.return_home()
+            while self.drone.distance_to_home()["distance"] >= 0.3:
+                time.sleep(1)
+            self.drone.land()
+            self.drone.close()
 
-    def receive(self, request):
+        thread = threading.Thread(target=run_task)
+        thread.start()
+
+    def receive(self, text_data):
         """
-            request = {
+            text_data = {
                 "method" : "GET"
                 "query" : [
                         "get_home",
@@ -59,7 +65,7 @@ class DroneConsumer(WebsocketConsumer):
                     ]
             }
 
-            request = {
+            text_data = {
                 "method" : "POST"
                 "query" : [
                         "take_off",
@@ -76,77 +82,77 @@ class DroneConsumer(WebsocketConsumer):
                 }
             }
         """
-        request = json.loads(request)
-        if request["method"] == "GET":
-            if "get_home" == request["query"]:
+        text_data = json.loads(text_data)
+        if text_data["method"] == "GET":
+            if "get_home" == text_data["query"]:
                 self.return_json(info=self.drone.get_home_location())
 
-            elif "get_battery" == request["query"]:
+            elif "get_battery" == text_data["query"]:
                 self.return_json(info=self.drone.get_battery_info())
 
-            elif "get_weather" == request["query"]:
+            elif "get_weather" == text_data["query"]:
                 self.return_json(info=self.drone.get_weather_details())
 
-            elif "get_info" == request["query"]:
+            elif "get_info" == text_data["query"]:
                 self.return_json(info=self.drone.get_base_info())
 
-            elif "get_location" == request["query"]:
+            elif "get_location" == text_data["query"]:
                 self.return_json(info=self.drone.get_gps_coordinates())
 
-            elif "get_speed" == request["query"]:
+            elif "get_speed" == text_data["query"]:
                 self.return_json(info=self.drone.get_speed())
 
-            elif "get_direction" == request["query"]:
+            elif "get_direction" == text_data["query"]:
                 self.return_json(info=self.drone.get_direction())
 
-            elif "get_distance_home" == request["query"]:
+            elif "get_distance_home" == text_data["query"]:
                 self.return_json(info=self.drone.distance_to_home())
 
-            elif "get_distance_target" == request["query"]:
+            elif "get_distance_target" == text_data["query"]:
                 self.return_json(info=self.drone.distance_to_target())
 
             else:
                 self.send_error()
 
 
-        elif request["method"] == "POST":
-            if "take_off" == request["query"]:
-                if "data" in request:
+        elif text_data["method"] == "POST":
+            if "take_off" == text_data["query"]:
+                if "data" in text_data:
                     self.return_json(info=self.drone.takeoff(
-                        altitude=float(request["data"]["alt"])
+                        altitude=float(text_data["data"]["alt"])
                     ))
                 else:
                     self.return_json(info=self.drone.takeoff())
 
-            elif "return_home" == request["query"]:
+            elif "return_home" == text_data["query"]:
                 self.return_json(info=self.drone.return_home())
 
-            elif "land" == request["query"]:
+            elif "land" == text_data["query"]:
                 self.return_json(info=self.drone.land())
 
-            elif "set_home_location" == request["query"]:
-                if "data" in request:
+            elif "set_home_location" == text_data["query"]:
+                if "data" in text_data:
                     self.return_json(info=self.drone.set_home_location(
-                        lat=float(request["data"]["lat"]),
-                        lon=float(request["data"]["lon"])
+                        lat=float(text_data["data"]["lat"]),
+                        lon=float(text_data["data"]["lon"])
                     ))
                 else:
                     self.return_json(info=self.drone.set_home_location_to_current())
 
-            elif "goto_location" == request["query"]:
-                if "alt" in request["data"]:
+            elif "goto_location" == text_data["query"]:
+                if "alt" in text_data["data"]:
                     self.return_json(info=self.drone.goto_location(
-                        lat=request["data"]["lat"],
-                        lon=request["data"]["lon"],
-                        alt=request["data"]["alt"]
+                        lat=text_data["data"]["lat"],
+                        lon=text_data["data"]["lon"],
+                        alt=text_data["data"]["alt"]
                     ))
                 else:
                     self.return_json(info=self.drone.goto_location(
-                        lat=request["data"]["lat"],
-                        lon=request["data"]["lon"]
+                        lat=text_data["data"]["lat"],
+                        lon=text_data["data"]["lon"]
                     ))
 
-            elif "raise_altitude" == request["query"]:
+            elif "raise_altitude" == text_data["query"]:
                 self.return_json(info=self.drone.raise_altitude(
-                    alt=float(request["data"]["alt"])
+                    alt=float(text_data["data"]["alt"])
                 ))
