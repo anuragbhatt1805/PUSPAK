@@ -1,7 +1,6 @@
 from channels.generic.websocket import WebsocketConsumer
 from Core.droneClass import Drone
 import json, time
-import threading
 
 ############################################################
 import dronekit_sitl
@@ -38,15 +37,12 @@ class DroneConsumer(WebsocketConsumer):
         #     "connection": "LOST",
         #     "drone":"HOME RETURN AND LAND"
         # })
-        def run_task():
-            self.drone.return_home()
-            while self.drone.distance_to_home()["distance"] >= 0.3:
-                time.sleep(1)
-            self.drone.land()
-            self.drone.close()
 
-        thread = threading.Thread(target=run_task)
-        thread.start()
+        self.drone.return_home()
+        while self.drone.distance_to_home()["distance"] >= 0.3:
+            time.sleep(1)
+        self.drone.land()
+        self.drone.close()
 
     def receive(self, text_data):
         """
