@@ -70,6 +70,7 @@ class DroneConsumer(WebsocketConsumer):
                         "set_home_location",
                         "goto_location",
                         "raise_altitude",
+                        "get_weather_details_location",
                     ]
                 "data" : {
                     "lat" : 13.038,
@@ -129,6 +130,15 @@ class DroneConsumer(WebsocketConsumer):
             elif "set_home_location" == text_data["query"]:
                 if "data" in text_data:
                     self.return_json(info=self.drone.set_home_location(
+                        lat=float(text_data["data"]["lat"]),
+                        lon=float(text_data["data"]["lon"])
+                    ))
+                else:
+                    self.return_json(info=self.drone.set_home_location_to_current())
+                    
+            elif "get_weather_details_location" == text_data["query"]:
+                if "data" in text_data:
+                    self.return_json(info=self.drone.get_weather_details_data(
                         lat=float(text_data["data"]["lat"]),
                         lon=float(text_data["data"]["lon"])
                     ))
