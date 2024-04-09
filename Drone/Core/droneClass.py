@@ -196,6 +196,12 @@ class Drone:
             lon=self.vehicle.location.global_relative_frame.lon
         )
 
+    def get_weather_details_data(self, lat, lon):
+        return gwd(
+            lat=lat,
+            lon=lon
+        )
+
     def close(self):
         self.vehicle.close()
 
