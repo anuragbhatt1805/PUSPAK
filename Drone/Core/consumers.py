@@ -1,11 +1,13 @@
 from channels.generic.websocket import WebsocketConsumer
 from Core.droneClass import Drone
 import json, time
+# import serial
 
 ############################################################
 import dronekit_sitl
 
 ############################################################
+# connection = serial.Serial('/dev/serial0', 9600, timeout=1)
 
 class DroneConsumer(WebsocketConsumer):
 
